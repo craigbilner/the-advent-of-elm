@@ -13,3 +13,7 @@ safeListMin =
 double : Int -> Int
 double a =
         a * 2
+
+addTuples : (Int, Int) -> (Int, Int) -> (Int, Int)
+addTuples a b =
+        ((fst a + fst b), (snd a + snd b))
