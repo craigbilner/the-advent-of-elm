@@ -9,11 +9,13 @@ import Task
 import Src.NotQuiteLisp.Tests as NQLTests
 import Src.IWasToldThereWouldBeNoMath.Tests as IWTTWBNMTests
 import Src.PerfectlySpherical.Tests as PSTests
+import Src.PerfectlySpherical2.Tests as PS2Tests
 
 tests : Test
 tests = ElmTest.suite ""  [ NQLTests.all
                           , IWTTWBNMTests.all
                           , PSTests.all
+                          , PS2Tests.all
                           ]
 
 console : IO ()
