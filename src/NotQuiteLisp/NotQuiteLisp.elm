@@ -12,6 +12,8 @@ convertBracketToNumber bracket =
                 _ ->
                         0
 
-
 run: String -> Int
-run bracketInput = List.sum (List.map convertBracketToNumber (String.split "" bracketInput))
+run bracketInput =
+        String.split "" bracketInput
+          |> List.map convertBracketToNumber
+          |> List.sum
