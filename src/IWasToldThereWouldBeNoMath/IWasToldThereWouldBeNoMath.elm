@@ -41,9 +41,16 @@ calculateSurfaceArea {l, w, h} =
         in
             sa + extra
 
+toTotalSurfaceArea :  String -> Int -> Int
 toTotalSurfaceArea dimensionsString total =
-        total + (calculateSurfaceArea (dimensionsFromString dimensionsString))
-
+        let
+            sa =
+                dimensionsString
+                |> dimensionsFromString
+                |> calculateSurfaceArea
+        in
+            total + sa
+            
 run : List String -> Int
 run presentDimensions =
         List.foldl toTotalSurfaceArea 0 presentDimensions
