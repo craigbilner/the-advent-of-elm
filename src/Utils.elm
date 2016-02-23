@@ -15,5 +15,5 @@ double a =
         a * 2
 
 addTuples : (Int, Int) -> (Int, Int) -> (Int, Int)
-addTuples a b =
-        ((fst a + fst b), (snd a + snd b))
+addTuples (a, b) (c, d) =
+        ((a + c), (b + d))
