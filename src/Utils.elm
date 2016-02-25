@@ -17,3 +17,11 @@ double a =
 addTuples : (Int, Int) -> (Int, Int) -> (Int, Int)
 addTuples (a, b) (c, d) =
         ((a + c), (b + d))
+
+isNothing : Maybe a -> Bool
+isNothing maybeToTest =
+        case maybeToTest of
+                Nothing ->
+                        True
+                _ ->
+                        False
