@@ -1,4 +1,4 @@
-module Src.NotQuiteLisp.NotQuiteLisp where
+module NotQuiteLisp where
 
 import String
 

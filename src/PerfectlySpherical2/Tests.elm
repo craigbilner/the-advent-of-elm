@@ -1,10 +1,10 @@
-module Src.PerfectlySpherical2.Tests where
+module PerfectlySpherical2.Tests where
 
 import ElmTest exposing (..)
 import String
 
 
-import Src.PerfectlySpherical2.PerfectlySpherical2 as PS2
+import PerfectlySpherical2 as PS2
 
 all : Test
 all =

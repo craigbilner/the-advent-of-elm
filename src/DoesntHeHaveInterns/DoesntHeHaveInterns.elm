@@ -1,10 +1,10 @@
-module Src.DoesntHeHaveInterns.DoesntHeHaveInterns where
+module DoesntHeHaveInterns where
 
 import String
 import Dict
 
 
-import Src.Utils as Utils
+import Utils
 
 vowels : List String
 vowels = ["a", "e", "i", "o", "u"]

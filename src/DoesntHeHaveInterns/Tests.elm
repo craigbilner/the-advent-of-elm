@@ -1,10 +1,10 @@
-module Src.DoesntHeHaveInterns.Tests where
+module DoesntHeHaveInterns.Tests where
 
 import ElmTest exposing (..)
 import String
 
 
-import Src.DoesntHeHaveInterns.DoesntHeHaveInterns as DHHI
+import DoesntHeHaveInterns as DHHI
 
 all : Test
 all =

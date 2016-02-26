@@ -1,7 +1,7 @@
-module Src.IWasToldThereWouldBeNoMath.IWasToldThereWouldBeNoMath where
+module IWasToldThereWouldBeNoMath where
 
 import String
-import Src.Utils exposing (safeToInt, safeListMin, double)
+import Utils
 
 type alias Dimensions =
         { l : Int
@@ -20,7 +20,7 @@ dimensionsFromList dimensionList =
 dimensionsFromString : String -> Dimensions
 dimensionsFromString dimensions =
         String.split "x" dimensions
-        |> List.map safeToInt
+        |> List.map Utils.safeToInt
         |> dimensionsFromList
 
 calculateSurfaceArea : Dimensions -> Int
@@ -34,10 +34,10 @@ calculateSurfaceArea {l, w, h} =
                 h * l
             sa =
                 [side1, side2, side3]
-                |> List.map double
+                |> List.map Utils.double
                 |> List.sum
             extra =
-                safeListMin [side1, side2, side3]
+                Utils.safeListMin [side1, side2, side3]
         in
             sa + extra
 

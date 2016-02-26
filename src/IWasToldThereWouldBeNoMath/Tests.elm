@@ -1,10 +1,10 @@
-module Src.IWasToldThereWouldBeNoMath.Tests where
+module IWasToldThereWouldBeNoMath.Tests where
 
 import ElmTest exposing (..)
 import String
 
 
-import Src.IWasToldThereWouldBeNoMath.IWasToldThereWouldBeNoMath as IWTTWBNM
+import IWasToldThereWouldBeNoMath as IWTTWBNM
 
 all : Test
 all =

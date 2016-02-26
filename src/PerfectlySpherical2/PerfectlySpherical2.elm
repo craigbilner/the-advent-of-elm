@@ -1,10 +1,10 @@
-module Src.PerfectlySpherical2.PerfectlySpherical2 where
+module PerfectlySpherical2 where
 
 import String
 import Set
 
 
-import Src.Utils as Utils
+import Utils
 
 directionToCoordinate : String -> (Int, Int)
 directionToCoordinate direction =

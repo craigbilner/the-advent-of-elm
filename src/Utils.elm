@@ -1,4 +1,4 @@
-module Src.Utils where
+module Utils where
 
 import String
 
