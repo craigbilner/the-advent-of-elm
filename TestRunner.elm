@@ -11,6 +11,7 @@ import IWasToldThereWouldBeNoMath.Tests as IWTTWBNMTests
 import PerfectlySpherical.Tests as PSTests
 import PerfectlySpherical2.Tests as PS2Tests
 import DoesntHeHaveInterns.Tests as DHHI
+import ProbablyAFire.Tests as PAF
 
 tests : Test
 tests = ElmTest.suite ""  [ NQLTests.all
@@ -18,6 +19,7 @@ tests = ElmTest.suite ""  [ NQLTests.all
                           , PSTests.all
                           , PS2Tests.all
                           , DHHI.all
+                          , PAF.all
                           ]
 
 console : IO ()
