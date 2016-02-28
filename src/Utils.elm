@@ -25,3 +25,13 @@ isNothing maybeToTest =
                         True
                 _ ->
                         False
+
+removeNonEmpty : List a -> List a -> List a
+removeNonEmpty listA flattened =
+        if List.isEmpty listA
+           then flattened
+           else List.append flattened listA
+
+flattenNonEmpties : List (List a) -> List a
+flattenNonEmpties =
+        List.foldl removeNonEmpty []

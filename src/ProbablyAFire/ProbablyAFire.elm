@@ -12,6 +12,12 @@ type Action
         | Toggle (Int, Int) (Int, Int)
         | NoOp
 
+type alias Range = { x1 : Int
+                   , y1 : Int
+                   , x2 : Int
+                   , y2 : Int
+                   }
+
 instructionToMatches : String -> List Regex.Match
 instructionToMatches =
         Regex.find Regex.All (Regex.regex "turn on|turn off|toggle|[0-9]+,[0-9]+")
@@ -65,87 +71,127 @@ instructionToAction instruction =
         in
             matchToAction (List.head matches) (List.tail matches)
 
-concatColumns : Int -> (Int, Int) -> List (Int, Int) -> List (Int, Int)
-concatColumns y coord coords =
+getLeftBit : Range -> Range -> List Range
+getLeftBit block toSplit =
+        if toSplit.x1 < block.x1
+           then [Range toSplit.x1 toSplit.y1 (block.x1 - 1) toSplit.y2]
+           else []
+
+getRightBit : Range -> Range -> List Range
+getRightBit block toSplit =
+        if toSplit.x2 > block.x2
+           then [Range (block.x2 + 1) toSplit.y1 toSplit.x2 toSplit.y2]
+           else []
+
+getTopBit : Range -> Range -> List Range
+getTopBit block toSplit =
+        if toSplit.y2 > block.y2
+           then [Range (max toSplit.x1 block.x1) (block.y2 + 1) (min toSplit.x2 block.x2) toSplit.y2]
+           else []
+
+getBottomBit : Range -> Range -> List Range
+getBottomBit block toSplit =
+        if toSplit.y1 < block.y1
+           then [Range (max toSplit.x1 block.x1) toSplit.y1 (min toSplit.x2 block.x2) (block.y1 - 1)]
+           else []
+
+splitRangeAroundBlock : Range -> Range -> List Range
+splitRangeAroundBlock block toSplit =
         let
-            ys =
-                    [((snd coord) + 1)..y]
-            column =
-                    List.map2 (,) (List.repeat (List.length ys) (fst coord)) ys
+            leftBit = getLeftBit block toSplit
+            rightBit = getRightBit block toSplit
+            topBit = getTopBit block toSplit
+            bottomBit = getBottomBit block toSplit
         in
-            List.append coords (coord::column)
+            Utils.flattenNonEmpties [leftBit, rightBit, topBit, bottomBit]
 
-startEndToList : (Int, Int) -> (Int, Int) -> List (Int, Int)
-startEndToList start end =
-        let
-            xs = [(fst start)..(fst end)]
-        in
-            snd start
-            |> List.repeat (List.length xs)
-            |> List.map2 (,) xs
-            |> List.foldl (concatColumns (snd end)) []
+determineSplit : Range -> Range -> List Range
+determineSplit block toSplit =
+        if toSplit.x2 < block.x1 then
+            --to the left
+            [toSplit]
 
-partitionByIntersection : List (Int, Int) -> (Int, Int) -> Bool
-partitionByIntersection listA coord =
-        List.member coord listA
+        else if toSplit.x1 > block.x2 then
+            --to the right
+            [toSplit]
 
-turnOn : List (Int, Int) -> (List (Int, Int), List (Int, Int))  -> List (Int, Int)
-turnOn turnedOn (_, newLights) =
-        List.append turnedOn newLights
+        else if toSplit.y1 > block.y2 then
+            --to the top
+            [toSplit]
 
-toggle : List (Int, Int) -> List (Int, Int) -> List (Int, Int)
-toggle instruction turnedOn =
-        let
-            (turnOff, newLights) =
-                    instruction
-                    |> List.partition (partitionByIntersection turnedOn)
-            lightsLeftOn =
-                    turnedOn
-                    |> List.partition (partitionByIntersection turnOff)
-                    |> snd
-        in
-            List.append lightsLeftOn newLights
+        else if toSplit.y2 < block.y1 then
+            --to the bottom
+            [toSplit]
 
-update : Action -> List (Int, Int) -> List (Int, Int)
+        else if toSplit.x1 >= block.x1
+             && toSplit.x2 <= block.x2
+             && toSplit.y1 >= block.y1
+             && toSplit.y2 <= block.y2 then
+            --is inside
+            []
+
+        else
+            splitRangeAroundBlock block toSplit
+
+concatSplits : Range -> Range -> List Range -> List Range
+concatSplits block toSplit splits =
+        List.append splits (determineSplit block toSplit)
+
+splitPerBlock : Range -> List Range -> List Range
+splitPerBlock block splits =
+        List.foldl (concatSplits block) [] splits
+
+splitRange : Range -> List Range -> List Range
+splitRange toSplit blocks =
+        List.foldl splitPerBlock [toSplit] blocks
+
+update : Action -> List Range -> List Range
 update action turnedOn =
         case action of
                 On start end ->
                         let
-                            instruction = startEndToList start end
+                            range = Range (fst start) (snd start) (fst end) (snd end)
                         in
                             if List.isEmpty turnedOn
-                               then instruction
-                               else instruction
-                                    |> List.partition (partitionByIntersection turnedOn)
-                                    |> turnOn turnedOn
+                               then [range]
+                               else List.append (splitRange range turnedOn) turnedOn
 
                 Off start end ->
                         let
-                            instruction = startEndToList start end
+                            range = Range (fst start) (snd start) (fst end) (snd end)
                         in
                             if List.isEmpty turnedOn
-                               then turnedOn
-                               else turnedOn
-                                    |> List.partition (partitionByIntersection instruction)
-                                    |> snd
+                               then []
+                               else splitPerBlock range turnedOn
 
-                Toggle start end ->                        
+                Toggle start end ->
                         let
-                            instruction = startEndToList start end
+                            range = Range (fst start) (snd start) (fst end) (snd end)
                         in
                             if List.isEmpty turnedOn
-                               then instruction
-                               else toggle instruction turnedOn
+                               then
+                                   [range]
+                               else
+                                   let
+                                       lightsToGoOn = splitRange range turnedOn
+                                       afterLightsOff = splitPerBlock range turnedOn
+                                   in
+                                       List.append lightsToGoOn afterLightsOff
 
                 NoOp ->
                         turnedOn
 
-changeLights : String -> List (Int, Int) -> List (Int, Int)
+changeLights : String -> List Range -> List Range
 changeLights instruction turnedOn =
         turnedOn
         |> update (instructionToAction instruction)
 
+rangesToCount : Range -> Int -> Int
+rangesToCount {x2, x1, y2, y1} count =
+            count + ((x2 - x1 + 1) * (y2 - y1 + 1))
+
 run : List String -> Int
 run instructions =
-        List.foldl changeLights [] instructions
-        |> List.length
+        instructions
+        |> List.foldl changeLights []
+        |> List.foldl rangesToCount 0
