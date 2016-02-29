@@ -8,6 +8,14 @@ safeToInt : String -> Int
 safeToInt =
         String.toInt >> Result.toMaybe >> Maybe.withDefault 0
 
+isInt : String -> Bool
+isInt string =
+        case String.toInt string of
+                Ok _ ->
+                        True
+                _ ->
+                        False
+
 safeListMin : List Int -> Int
 safeListMin =
         List.minimum >> Maybe.withDefault 0

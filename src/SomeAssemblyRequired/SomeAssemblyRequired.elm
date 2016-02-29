@@ -6,11 +6,8 @@ import Regex
 import Debug
 import String
 
-import Utils
 
-type alias Model = { values : Dict.Dict String Int
-                   , rules : List Rule 
-                   }
+import Utils
 
 type Rule = VALUE String Int
           | AND String String String
@@ -21,11 +18,8 @@ type Rule = VALUE String Int
           | BINDING String String
           | NoOp
 
-initModel : Model
-initModel = Model Dict.empty []
-
 ruleRegex : String
-ruleRegex = "([0-9]+|[a-z]+) -> ([a-z]+)|([a-z]+) (AND|OR|LSHIFT|RSHIFT) ([a-z]+|[0-9]+) -> ([a-z]+)|(NOT) ([a-z]+) -> ([a-z]+)"
+ruleRegex = "([0-9]+|[a-z]+) -> ([a-z]+)|([a-z]+|[0-9]+) (AND|OR|LSHIFT|RSHIFT) ([a-z]+|[0-9]+) -> ([a-z]+)|(NOT) ([a-z]+) -> ([a-z]+)"
 
 instructionToRule : String -> Rule
 instructionToRule instruction =
@@ -49,14 +43,14 @@ instructionToRule instruction =
                                             RSHIFT key key1 (Utils.safeToInt key2)
 
                                     _ ->
-                                            NoOp
+                                            Debug.crash "Op unknown"
                     op::key1::key::tail ->
                             case op of
                                     "NOT" ->
                                             NOT key key1
 
                                     _ ->
-                                            NoOp
+                                            Debug.crash "Not a NOT"
 
                     value::key::tail ->
                             case String.toInt value of
@@ -69,165 +63,150 @@ instructionToRule instruction =
                     _ ->
                             Debug.crash ("Unknown rule: " ++ instruction)
 
-evaluateAND : Model -> String -> String -> String -> Model
-evaluateAND model key key1 key2 =
+evaluateAND : Dict.Dict String Int -> String -> String -> String -> Maybe (String, Int)
+evaluateAND values key key1 key2 =
         let
-            value1 = Dict.get key1 model.values
-            value2 = Dict.get key2 model.values
+            value1 =
+                    if Utils.isInt key1
+                        then Just (Utils.safeToInt key1)
+                        else Dict.get key1 values
+
+            value2 = Dict.get key2 values
+
+            vp = (value1, value2)
+        in
+            case vp of
+                    (Just v1, Just v2) ->
+                            Just (key, Bitwise.and v1 v2)
+
+                    _ ->
+                            Nothing
+
+evaluateOR : Dict.Dict String Int -> String -> String -> String -> Maybe (String, Int)
+evaluateOR values key key1 key2 =
+        let
+            value1 = Dict.get key1 values
+
+            value2 = Dict.get key2 values
+
             v = (value1, value2)
         in
             case v of
                     (Just v1, Just v2) ->
-                            let
-                                rule = AND key key1 key2
-                            in
-                                { model | values = (Dict.insert key (Bitwise.and v1 v2) model.values)
-                                        , rules = (removeRule rule model.rules)
-                                }
-                    _ ->
-                            { model | rules = ((AND key key1 key2)::model.rules) }
+                            Just (key, Bitwise.or v1 v2)
 
-evaluateOR : Model -> String -> String -> String -> Model
-evaluateOR model key key1 key2 =
-        let
-            value1 = Dict.get key1 model.values
-            value2 = Dict.get key2 model.values
-            v = (value1, value2)
-        in
-            case v of
-                    (Just v1, Just v2) ->
-                            let
-                                rule = OR key key1 key2
-                            in
-                                { model | values = (Dict.insert key (Bitwise.or v1 v2) model.values)
-                                        , rules = (removeRule rule model.rules)
-                                }
                     _ ->
-                            { model | rules = ((OR key key1 key2)::model.rules) }
+                            Nothing
 
-evaluateNOT : Model -> String -> String -> Model
-evaluateNOT model key key1 =
+evaluateNOT : Dict.Dict String Int -> String -> String -> Maybe (String, Int)
+evaluateNOT values key key1 =
         let
-            value1 = Dict.get key1 model.values
+            value1 = Dict.get key1 values
         in
             case value1 of
                     Just v1 ->
-                            let
-                                rule = NOT key key1
-                                result = Bitwise.and 0xffff (Bitwise.complement v1) 
-                            in
-                                { model | values = (Dict.insert key result model.values)
-                                        , rules = (removeRule rule model.rules)
-                                }
-                    _ ->
-                            { model | rules = ((NOT key key1)::model.rules) }
+                            Just (key, Bitwise.and 0xffff (Bitwise.complement v1))
 
-evaluateLShift : Model -> String -> String -> Int -> Model
-evaluateLShift model key key1 num =
+                    _ ->
+                            Nothing
+
+evaluateLShift : Dict.Dict String Int -> String -> String -> Int -> Maybe (String, Int)
+evaluateLShift values key key1 num =
         let
-            value1 = Dict.get key1 model.values
+            value1 = Dict.get key1 values
         in
             case value1 of
                     Just v1 ->
-                            let
-                                rule = LSHIFT key key1 num
-                            in
-                                { model | values = (Dict.insert key (Bitwise.shiftLeft v1 num) model.values)
-                                        , rules = (removeRule rule model.rules)
-                                }
-                    _ ->
-                            { model | rules = ((LSHIFT key key1 num)::model.rules) }
+                            Just (key, Bitwise.shiftLeft v1 num)
 
-evaluateRShift : Model -> String -> String -> Int -> Model
-evaluateRShift model key key1 num =
+                    _ ->
+                            Nothing
+
+evaluateRShift : Dict.Dict String Int -> String -> String -> Int -> Maybe (String, Int)
+evaluateRShift values key key1 num =
         let
-            value1 = Dict.get key1 model.values
+            value1 = Dict.get key1 values
         in
             case value1 of
                     Just v1 ->
-                            let
-                                rule = RSHIFT key key1 num
-                            in
-                                { model | values = (Dict.insert key (Bitwise.shiftRight v1 num) model.values) 
-                                        , rules = (removeRule rule model.rules)
-                                }
-                    _ ->
-                            { model | rules = ((RSHIFT key key1 num)::model.rules) }
+                            Just (key, Bitwise.shiftRight v1 num)
 
-evaluateBinding : Model -> String -> String -> Model
-evaluateBinding model key key1 =
+                    _ ->
+                            Nothing
+
+evaluateBinding : Dict.Dict String Int -> String -> String -> Maybe (String, Int)
+evaluateBinding values key key1 =
        let
-            value1 = Dict.get key1 model.values
+            value1 = Dict.get key1 values
        in
             case value1 of
                     Just v1 ->
-                            let
-                                rule = BINDING key key1
-                            in
-                                { model | values = (Dict.insert key v1 model.values) 
-                                        , rules = (removeRule rule model.rules)
-                                }
+                            Just (key, v1)
+
                     _ ->
-                            { model | rules = ((BINDING key key1)::model.rules) }
+                            Nothing
 
-removeRule : Rule -> List Rule -> List Rule
-removeRule rule =
-        List.filter (\a -> a /= rule)
-
-evaluateRule : Model -> Rule -> Model
-evaluateRule model rule =
+evaluateRule : Dict.Dict String Int -> Rule -> Maybe (String, Int)
+evaluateRule values rule =
         case rule of
                 VALUE key num ->
-                        { model | values = (Dict.insert key num model.values) }
+                        Just (key, num)
 
                 AND key key1 key2 ->
-                        evaluateAND model key key1 key2
+                        evaluateAND values key key1 key2
 
                 OR key key1 key2 ->
-                        evaluateOR model key key1 key2
+                        evaluateOR values key key1 key2
 
                 NOT key key1 ->
-                        evaluateNOT model key key1 
+                        evaluateNOT values key key1 
 
                 LSHIFT key key1 num ->
-                        evaluateLShift model key key1 num
+                        evaluateLShift values key key1 num
 
                 RSHIFT key key1 num ->
-                        evaluateRShift model key key1 num
+                        evaluateRShift values key key1 num
 
                 BINDING key key1 ->
-                        evaluateBinding model key key1
+                        evaluateBinding values key key1
 
                 NoOp ->
-                        model
+                        Debug.crash "Unknown rule"
 
-parseToModel : String -> Model -> Model
-parseToModel instruction model =
-            instructionToRule instruction
-            |> evaluateRule model
-
-runAllRules : String -> Model -> Model
-runAllRules wire model =
+parseToModel : String -> (Dict.Dict String Int, List Rule) -> (Dict.Dict String Int, List Rule)
+parseToModel instruction (values, rules) =
         let
-            value = Dict.get wire model.values
+            rule = instructionToRule instruction
+            result = evaluateRule values rule
         in
-           case value of
-                   Just val ->
-                           model
+            case result of
+                    Just (key, value) ->
+                            (Dict.insert key value values, rules)
 
-                   _ ->
-                           case model.rules of
-                                   [] ->
-                                           model
+                    _ ->
+                            (values, rule::rules)
 
-                                   h::t ->
-                                           evaluateRule model h
-                                           |> runAllRules wire
+runAllRules : Dict.Dict String Int -> List Rule -> Dict.Dict String Int
+runAllRules values rules =
+        case rules of
+                [] ->
+                        values
+
+                h::t ->
+                        let
+                            result = evaluateRule values h
+                        in
+                           case result of
+                                   Just (key, value) ->
+                                           runAllRules (Dict.insert key value values) t
+
+                                   _ ->
+                                           runAllRules values (List.append t [h])
 
 run : List String -> String -> Maybe Int
 run instructions wire =
         let
-            parsedModel = List.foldl parseToModel initModel instructions
-            model = runAllRules wire parsedModel
+            parsedModel = List.foldl parseToModel (Dict.empty, []) instructions
+            allValues = runAllRules (fst parsedModel) (snd parsedModel)
         in
-            Dict.get wire model.values
+            Dict.get wire allValues
