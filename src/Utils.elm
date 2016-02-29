@@ -1,6 +1,8 @@
 module Utils where
 
 import String
+import Regex
+
 
 safeToInt : String -> Int
 safeToInt =
@@ -35,3 +37,23 @@ removeNonEmpty listA flattened =
 flattenNonEmpties : List (List a) -> List a
 flattenNonEmpties =
         List.foldl removeNonEmpty []
+
+flattenSubmatches : Regex.Match -> List String -> List String
+flattenSubmatches match submatches =
+        List.map maybeStringToValue match.submatches
+        |> List.filter (\a -> String.length a > 0)
+        |> List.append submatches
+
+matchesToSubmatches : List Regex.Match -> List String
+matchesToSubmatches =
+        List.foldl flattenSubmatches []
+
+maybeStringToValue : Maybe String -> String
+maybeStringToValue maybe =
+        case maybe of
+                Just a ->
+                        String.trim a
+
+                _ ->
+                        ""
+
