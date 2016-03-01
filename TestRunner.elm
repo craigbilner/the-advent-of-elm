@@ -13,6 +13,7 @@ import PerfectlySpherical2.Tests as PS2Tests
 import DoesntHeHaveInterns.Tests as DHHI
 import ProbablyAFire.Tests as PAF
 import SomeAssemblyRequired.Tests as SAR
+import Matchsticks.Tests as M
 
 tests : Test
 tests = ElmTest.suite ""  [ NQLTests.all
@@ -22,6 +23,7 @@ tests = ElmTest.suite ""  [ NQLTests.all
                           , DHHI.all
                           , PAF.all
                           , SAR.all
+                          , M.all
                           ]
 
 console : IO ()
