@@ -2,7 +2,10 @@ module Utils where
 
 import String
 import Regex
+import Char
 
+
+import ParseInt
 
 safeToInt : String -> Int
 safeToInt =
@@ -64,4 +67,16 @@ maybeStringToValue maybe =
 
                 _ ->
                         ""
+stringToASCII : String -> Result String String
+stringToASCII input =
+        let
+            parsedInt = ParseInt.parseIntHex input
+        in
+            case parsedInt of
+                    Ok num ->
+                            Char.fromCode num
+                            |> String.fromChar
+                            |> Ok
 
+                    Err num ->
+                            Err input
