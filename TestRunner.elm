@@ -14,6 +14,7 @@ import DoesntHeHaveInterns.Tests as DHHI
 import ProbablyAFire.Tests as PAF
 import SomeAssemblyRequired.Tests as SAR
 import Matchsticks.Tests as M
+import AllInASingleNight.Tests as AIASN
 
 tests : Test
 tests = ElmTest.suite ""  [ NQLTests.all
@@ -24,6 +25,7 @@ tests = ElmTest.suite ""  [ NQLTests.all
                           , PAF.all
                           , SAR.all
                           , M.all
+                          , AIASN.all
                           ]
 
 console : IO ()

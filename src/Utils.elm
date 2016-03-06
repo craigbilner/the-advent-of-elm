@@ -80,3 +80,40 @@ stringToASCII input =
 
                     Err num ->
                             Err input
+
+factorial : Int -> Int
+factorial value =
+        List.product [1..value]
+
+splitAt : Int -> List a -> (List a, List a)
+splitAt pos list =
+        (List.take pos list, List.drop pos list)
+
+swapAt pos input =
+        let
+            split = splitAt pos input
+            tailSplit = splitAt 1 (snd split)
+        in
+            List.append (fst split) (List.append (snd tailSplit) (fst tailSplit))
+
+doSwaps pos origInput input =
+        let
+            n = List.length origInput
+            swap = swapAt pos input
+        in
+            if pos == 1
+               then
+                   if swap == origInput
+                      then swap::[]
+                      else swap::(doSwaps (n - 2) origInput swap)
+               else
+                   swap::(doSwaps (pos - 1) origInput input)
+
+getAllCombos input =
+        let
+            n = List.length input
+        in
+           doSwaps (n - 2) input input
+
+
+
