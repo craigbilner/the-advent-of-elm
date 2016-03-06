@@ -89,6 +89,7 @@ splitAt : Int -> List a -> (List a, List a)
 splitAt pos list =
         (List.take pos list, List.drop pos list)
 
+swapAt : Int -> List String -> List String
 swapAt pos input =
         let
             split = splitAt pos input
@@ -96,24 +97,26 @@ swapAt pos input =
         in
             List.append (fst split) (List.append (snd tailSplit) (fst tailSplit))
 
-doSwaps pos origInput input =
+makeCombos : List String -> String -> List (List String) -> List (List String)
+makeCombos input char combos =
         let
-            n = List.length origInput
-            swap = swapAt pos input
+            others = List.filter (\x -> x /= char) input
         in
-            if pos == 1
-               then
-                   if swap == origInput
-                      then swap::[]
-                      else swap::(doSwaps (n - 2) origInput swap)
-               else
-                   swap::(doSwaps (pos - 1) origInput input)
+            List.append combos (List.map (\x -> char::x) (getAllCombos others))
 
+getAllCombos : List String -> List (List String)
 getAllCombos input =
         let
             n = List.length input
         in
-           doSwaps (n - 2) input input
+            if n == 0 then
+                []
 
+            else if n == 1 then
+                [input]
 
+            else if n == 2 then
+                input::(swapAt 0 input)::[]
 
+            else
+                List.foldl (makeCombos input) [] input

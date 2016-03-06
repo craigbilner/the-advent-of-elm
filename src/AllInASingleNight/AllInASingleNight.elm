@@ -32,19 +32,42 @@ extractPlaces : (String, String) -> Int -> List String -> List String
 extractPlaces (start, end) _ places =
         start::end::places
 
-uniquePlaces : Dict.Dict (String, String) Int -> Set.Set String
-uniquePlaces distances =
-        Dict.foldl extractPlaces [] distances
-        |> Set.fromList
+uniquePlaces : Dict.Dict (String, String) Int -> List String
+uniquePlaces =
+        Dict.foldl extractPlaces []
+        >> Set.fromList
+        >> Set.toList
 
--- findShortestDistance : Dict.Dict (String, String) Int -> Int
+safeGet : (String, String) -> Dict.Dict (String, String) Int -> Int
+safeGet key =
+        Dict.get key >> Maybe.withDefault 0
+
+placesToDistance : Dict.Dict (String, String) Int -> List String -> Int
+placesToDistance distances places =
+        case places of
+                [] ->
+                        0
+
+                start::finish::tail ->
+                        let
+                            v1 = safeGet (start, finish) distances
+                            v2 = safeGet (finish, start) distances
+                        in
+                            (+)
+                            (max v1 v2)
+                            (placesToDistance distances (finish::tail))
+
+                _ ->
+                        0
+
+findShortestDistance : Dict.Dict (String, String) Int -> Int
 findShortestDistance distances =
-        let
-            places = uniquePlaces distances
-        in
-            places
+        uniquePlaces distances
+        |> Utils.getAllCombos
+        |> List.map (placesToDistance distances)
+        |> Utils.safeListMin
 
--- run : List String -> Int
-run input =
-        List.foldl parseInput Dict.empty input
-        |> findShortestDistance
+run : List String -> Int
+run =
+        List.foldl parseInput Dict.empty
+        >> findShortestDistance
