@@ -15,6 +15,7 @@ import ProbablyAFire.Tests as PAF
 import SomeAssemblyRequired.Tests as SAR
 import Matchsticks.Tests as M
 import AllInASingleNight.Tests as AIASN
+import ElvesLookElvesSay.Tests as ELES
 
 tests : Test
 tests = ElmTest.suite ""  [ NQLTests.all
@@ -26,6 +27,7 @@ tests = ElmTest.suite ""  [ NQLTests.all
                           , SAR.all
                           , M.all
                           , AIASN.all
+                          , ELES.all
                           ]
 
 console : IO ()
