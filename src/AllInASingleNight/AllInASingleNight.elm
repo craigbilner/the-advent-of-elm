@@ -65,7 +65,7 @@ findShortestDistance distances =
         uniquePlaces distances
         |> Utils.getAllCombos
         |> List.map (placesToDistance distances)
-        |> Utils.safeListMin
+        |> Utils.safeListMax
 
 run : List String -> Int
 run =

@@ -23,6 +23,10 @@ safeListMin : List Int -> Int
 safeListMin =
         List.minimum >> Maybe.withDefault 0
 
+safeListMax : List Int -> Int
+safeListMax =
+        List.maximum >> Maybe.withDefault 0
+
 double : Int -> Int
 double a =
         a * 2
